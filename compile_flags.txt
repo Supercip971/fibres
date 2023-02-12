@@ -1,0 +1,8 @@
+-std=gnu2x
+-Isrc
+-Werror
+-Wextra 
+-Wall 
+-Wundef 
+-Wshadow 	
+-Wvla
