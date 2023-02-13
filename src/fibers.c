@@ -2,6 +2,7 @@
 #include "fibers.h"
 #include <assert.h>
 #include <stdio.h>
+#include <sys/time.h>
 
 #define FIBER_STACK_SIZE 8192*2
 
@@ -330,6 +331,44 @@ void yield(void)
     fiber_current_table_id = next_id;
     fibers_switch(&previous->ctx, &next->ctx);
     
+}
+
+void fiber_exit(void)
+{
+    Fiber* fiber = fiber_self();
+    fiber->state = FIBER_STATE_DEAD;
+    yield();
+}
+
+static uint64_t current_time_ms()
+{
+    struct timeval time; 
+    gettimeofday(&time, NULL); 
+    uint64_t milliseconds = time.tv_sec*1000LL + time.tv_usec/1000; 
+    return milliseconds;
+}
+
+
+static bool fiber_sleep_blocker(void* ctx)
+{
+    uint64_t ms = (uint64_t)ctx;
+    uint64_t now = current_time_ms();
+    
+    if(now >= ms)
+    {
+        return true;
+    }
+    return false;
+}
+
+
+void fiber_sleep(uint64_t ms)
+{
+    Fiber* fiber = fiber_self();
+    uint64_t end = current_time_ms() + ms;
+    fiber->state = FIBER_STATE_WAITING;
+    fiber->blocker = (FiberBlocker){.fn = fiber_sleep_blocker, .ctx = (void*)end};
+    yield();
 }
 
 int fiber_count(void)
