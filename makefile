@@ -2,9 +2,7 @@ MKCWD=mkdir -p $(@D)
 
 CC ?= gcc
 
-SANITIZERS = 			\
-	-fsanitize=address 	\
-	-fsanitize=undefined
+AS = nasm
 
 
 CFLAGS_WARNS ?= 	\
@@ -16,12 +14,14 @@ CFLAGS_WARNS ?= 	\
 		-Wvla
 
 CFLAGS = 			\
-		-O2 		\
+		-Ofast 		\
 		-g 		 	\
-		-std=gnu2x 	\
-		--analyzer 	\
+		-std=c99 	\
 		-Isrc/      \
 		$(CFLAGS_WARNS)
+
+AFLAGS = 			\
+		-f elf64
 
 LDFLAGS=$(SANITIZERS)
 
@@ -31,13 +31,17 @@ BUILD_DIR = build
 SRC_DIR = src
 
 CFILES = $(wildcard $(SRC_DIR)/*.c) $(wildcard $(SRC_DIR)/*/*.c) $(wildcard $(SRC_DIR)/*/*/*.c)
+ASFILES = $(wildcard $(SRC_DIR)/*.asm) $(wildcard $(SRC_DIR)/*/*.asm) $(wildcard $(SRC_DIR)/*/*/*.asm)
+
+
 DFILES = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.d, $(CFILES))
-OFILES = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(CFILES))
+OFILES = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(CFILES)) \
+			$(patsubst $(SRC_DIR)/%.asm, $(BUILD_DIR)/%.o, $(ASFILES)) 
 
 OUTPUT = build/$(PROJECT_NAME)
 
 
-$(OUTPUT): $(OFILES)
+$(OUTPUT): $(OFILES) 
 	@$(MKCWD)
 	@echo " LD [ $@ ] $<"
 	@$(CC) -o $@ $^ $(LDFLAGS)
@@ -46,6 +50,11 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	@$(MKCWD)
 	@echo " CC [ $@ ] $<"
 	@$(CC) $(CFLAGS) -MMD -MP $< -c -o $@ 
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.asm
+	@$(MKCWD)
+	@echo " AS [ $@ ] $<"
+	@$(AS) $(AFLAGS) $< -o $@ 
+
 
 run: $(OUTPUT)
 	@$(OUTPUT)
