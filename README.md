@@ -1,7 +1,7 @@
 
 # Fibers (or coroutines) in C99 !
 
-Just a sample project for a blog article I'm writing about fibers in C (for linux).
+Just a sample project for a blog article I'm writing about fibers in C (for linux), that you can read here: [cyp.sh/blog/coroutines-in-c](https://cyp.sh/blog/coroutines-in-c) .
 
 
 It's mainly inspired by an old code I wrote for [Brutal](https://github.com/brutal-org/brutal).
